@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뇌졸중 전문 AI 시스템</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            color: #7f8c8d;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+        }
+        
+        .content-area {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            color: #7f8c8d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        
+        .tab:hover {
+            color: #2980b9;
+            background: rgba(52, 152, 219, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: rgba(52, 152, 219, 0.05);
+        }
+        
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: rgba(46, 204, 113, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(45deg, #27ae60, #229954);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .question-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .question-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .ai-response {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            border-left: 5px solid #3498db;
+        }
+        
+        .emergency-info {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            border: 2px solid #f44336;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .fast-check {
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+            border: 2px solid #4caf50;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .info-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .example-questions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .example-question {
+            padding: 15px;
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid #3498db;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .example-question:hover {
+            background: rgba(52, 152, 219, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: rgba(39, 174, 96, 0.1);
+            border: 1px solid #27ae60;
+            color: #27ae60;
+        }
+        
+        .alert-error {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+        }
+        
+        .alert-warning {
+            background: rgba(243, 156, 18, 0.1);
+            border: 1px solid #f39c12;
+            color: #f39c12;
+        }
+        
+        .model-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e74c3c;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.online {
+            background: #27ae60;
+        }
+        
+        .status-dot.offline {
+            background: #e74c3c;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .pdf-preview {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid #3498db;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .pdf-text {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            line-height: 1.4;
+            color: #555;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: relative;
+                top: 0;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 뇌졸중 전문 AI 시스템</h1>
+            <p>DeepSeek R1 1.5B 기반 의료 어시스턴트</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="content-area">
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('upload')">📄 문서 업로드</button>
+                    <button class="tab" onclick="showTab('chat')">💬 AI 상담</button>
+                    <button class="tab" onclick="showTab('info')">📊 뇌졸중 정보</button>
+                </div>
+                
+                <!-- 문서 업로드 탭 -->
+                <div id="upload" class="tab-content active">
+                    <h2>의료 문서 업로드</h2>
+                    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                        <div id="uploadText">
+                            <h3>📄 PDF 파일을 업로드하세요</h3>
+                            <p>뇌졸중 관련 의료 문서, 논문, 가이드라인 등을 드래그하거나 클릭하여 업로드</p>
+                        </div>
+                        <input type="file" id="fileInput" accept=".pdf" style="display: none;" onchange="handleFileUpload(event)">
+                    </div>
+                    
+                    <div id="uploadStatus"></div>
+                    
+                    <div class="info-card">
+                        <h3>💡 업로드 팁</h3>
+                        <ul>
+                            <li>PDF 형식의 의료 문서를 업로드하세요 (최대 10MB)</li>
+                            <li>뇌졸중 관련 논문, 가이드라인, 교육 자료 등</li>
+                            <li>업로드된 문서는 AI 상담에서 참고 자료로 활용됩니다</li>
+                            <li>개인 의료 정보는 업로드하지 마세요</li>
+                            <li>텍스트가 포함된 PDF만 지원됩니다</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- AI 상담 탭 -->
+                <div id="chat" class="tab-content">
+                    <h2>뇌졸중 AI 상담</h2>
+                    
+                    <div id="noDocumentWarning" class="alert alert-warning">
+                        ⚠️ 더 정확한 답변을 위해 관련 의료 문서를 먼저 업로드해주세요.
+                    </div>
+                    
+                    <textarea 
+                        id="questionInput" 
+                        class="question-input" 
+                        placeholder="뇌졸중 관련 질문을 입력하세요&#10;예: 뇌졸중 초기 증상은 무엇인가요?"
+                    ></textarea>
+                    
+                    <button class="btn" onclick="askAI()" id="askButton">🤖 AI에게 질문하기</button>
+                    
+                    <div id="loading" class="loading">
+                        <div class="spinner"></div>
+                        <p>AI가 답변을 생성하고 있습니다...</p>
+                    </div>
+                    
+                    <div id="aiResponse"></div>
+                    
+                    <div class="example-questions">
+                        <h3>💡 질문 예시</h3>
+                        <div class="example-question" onclick="setQuestion('뇌졸중의 주요 증상은 무엇인가요?')">
+                            Q1: 뇌졸중의 주요 증상은 무엇인가요?
+                        </div>
+                        <div class="example-question" onclick="setQuestion('뇌졸중 예방 방법을 알려주세요')">
+                            Q2: 뇌졸중 예방 방법을 알려주세요
+                        </div>
+                        <div class="example-question" onclick="setQuestion('뇌졸중 응급처치 방법은?')">
+                            Q3: 뇌졸중 응급처치 방법은?
+                        </div>
+                        <div class="example-question" onclick="setQuestion('뇌졸중 재활 치료에 대해 설명해주세요')">
+                            Q4: 뇌졸중 재활 치료에 대해 설명해주세요
+                        </div>
+                        <div class="example-question" onclick="setQuestion('뇌졸중 위험 요인은 무엇인가요?')">
+                            Q5: 뇌졸중 위험 요인은 무엇인가요?
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 뇌졸중 정보 탭 -->
+                <div id="info" class="tab-content">
+                    <h2>📊 뇌졸중 기본 정보</h2>
+                    
+                    <div class="fast-check">
+                        <h3>🔍 FAST 체크리스트</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                            <div>
+                                <strong>F (Face - 얼굴)</strong>
+                                <p>• 얼굴 한쪽이 마비</p>
+                                <p>• 웃을 때 입이 한쪽으로 돌아감</p>
+                            </div>
+                            <div>
+                                <strong>A (Arm - 팔)</strong>
+                                <p>• 팔 한쪽에 힘이 없음</p>
+                                <p>• 팔을 들어올리기 어려움</p>
+                            </div>
+                            <div>
+                                <strong>S (Speech - 언어)</strong>
+                                <p>• 말이 어눌해짐</p>
+                                <p>• 말을 이해하기 어려움</p>
+                            </div>
+                            <div>
+                                <strong>T (Time - 시간)</strong>
+                                <p>• 위 증상 중 하나라도 있으면</p>
+                                <p><strong>즉시 119 신고!</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="emergency-info">
+                        <h3>🚨 응급 증상</h3>
+                        <p><strong>다음 증상이 있으면 즉시 응급실로!</strong></p>
+                        <ul>
+                            <li>갑작스런 심한 두통</li>
+                            <li>한쪽 얼굴이나 팔다리 마비</li>
+                            <li>말이 어눌하거나 이해 불가</li>
+                            <li>갑작스런 시야 장애</li>
+                            <li>심한 어지럼증과 보행 장애</li>
+                            <li>의식 저하</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="info-card">
+                        <h3>🏥 치료 골든타임</h3>
+                        <div style="background: rgba(39, 174, 96, 0.1); padding: 15px; border-radius: 10px; margin-top: 10px;">
+                            <p><strong>뇌졸중 치료의 골든타임</strong></p>
+                            <ul>
+                                <li>허혈성 뇌졸중: 발생 후 3-4.5시간 내</li>
+                                <li>혈전 제거술: 발생 후 6-24시간 내</li>
+                                <li><strong>빠른 치료가 후유증을 최소화합니다!</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="info-card">
+                        <h3>💡 예방 방법</h3>
+                        <div style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 10px; margin-top: 10px;">
+                            <p><strong>뇌졸중 예방을 위한 생활 습관</strong></p>
+                            <ul>
+                                <li>정기적인 혈압 체크</li>
+                                <li>금연 및 절주</li>
+                                <li>규칙적인 운동</li>
+                                <li>균형 잡힌 식단</li>
+                                <li>스트레스 관리</li>
+                                <li>당뇨병 관리</li>
+                                <li>정기 건강검진</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <h3>🔧 시스템 설정</h3>
+                
+                <div class="model-status">
+                    <div class="status-dot offline" id="modelStatus"></div>
+                    <span id="modelStatusText">AI 모델 오프라인</span>
+                </div>
+                
+                <select id="modelSelect" style="width: 100%; padding: 10px; border-radius: 5px; margin-bottom: 20px;" onchange="changeModel()">
+                    <option value="deepseek-r1:1.5b">DeepSeek R1 1.5B</option>
+                    <option value="llama3.2">Llama 3.2</option>
+                    <option value="gemma2">Gemma 2</option>
+                </select>
+                
+                <button class="btn" onclick="connectModel()" id="connectButton">🔗 모델 연결</button>
+                
+                <div class="emergency-info">
+                    <h3>🚨 응급 정보</h3>
+                    <div style="text-align: center; margin: 15px 0;">
+                        <button class="btn btn-danger" onclick="call119()">📞 119 신고</button>
+                    </div>
+                    <p><strong>FAST 체크 결과 양성 시 즉시 신고!</strong></p>
+                </div>
+                
+                <div class="fast-check">
+                    <h3>⏰ 골든타임</h3>
+                    <p style="text-align: center; font-size: 1.2em; font-weight: bold;">
+                        뇌졸중 발생 후<br>
+                        <span style="color: #e74c3c;">3-4.5시간 내</span><br>
+                        치료가 중요합니다!
+                    </p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>⚠️ 의료 면책 고지</h3>
+                    <p style="font-size: 0.9em;">
+                        • 이 정보는 교육 목적입니다<br>
+                        • 의학적 조언을 대체하지 않습니다<br>
+                        • 건강 문제는 의료진과 상담하세요<br>
+                        • 응급상황 시 즉시 119 신고
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 전역 변수
+        let uploadedDocument = null;
+        let aiModel = 'deepseek-r1:1.5b';
+        let modelConnected = false;
+        let pdfDocument = null;
+        
+        // 페이지 로드 시 초기화
+        window.addEventListener('load', function() {
+            // PDF.js 워커 설정
+            if (typeof pdfjsLib !== 'undefined') {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+            }
+            
+            // 모델 상태 초기화
+            updateModelStatus(false);
+            
+            // 엔터 키 이벤트 리스너 추가
+            document.getElementById('questionInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    askAI();
+                }
+            });
+        });
+        
+        // 탭 전환 함수
+        function showTab(tabName) {
+            // 모든 탭 비활성화
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // 선택된 탭 활성화
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // 파일 업로드 처리
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // 파일 유효성 검사
+            if (!validateFile(file)) {
+                return;
+            }
+            
+            const uploadStatus = document.getElementById('uploadStatus');
+            uploadStatus.innerHTML = `
+                <div class="loading" style="display: block;">
+                    <div class="spinner"></div>
+                    <p>PDF 문서를 분석하고 있습니다...</p>
+                </div>
+            `;
+            
+            try {
+                // PDF 텍스트 추출
+                const text = await extractTextFromPDF(file);
+                
+                if (!text || text.trim().length === 0) {
+                    throw new Error('PDF에서 텍스트를 추출할 수 없습니다. 이미지 기반 PDF이거나 손상된 파일일 수 있습니다.');
+                }
+                
+                uploadedDocument = {
+                    name: file.name,
+                    size: file.size,
+                    content: text,
+                    uploadTime: new Date().toLocaleString()
+                };
+                
+                uploadStatus.innerHTML = `
+                    <div class="alert alert-success">
+                        ✅ 문서 분석 완료!
+                        <br><strong>파일명:</strong> ${file.name}
+                        <br><strong>크기:</strong> ${(file.size / 1024).toFixed(2)} KB
+                        <br><strong>추출된 텍스트:</strong> ${text.length.toLocaleString()}자
+                        <br><strong>업로드 시간:</strong> ${uploadedDocument.uploadTime}
+                    </div>
+                    <div class="pdf-preview">
+                        <h4>📄 문서 미리보기</h4>
+                        <div class="pdf-text">${text.substring(0, 500)}${text.length > 500 ? '...' : ''}</div>
+                    </div>
+                `;
+                
+                // 경고 메시지 숨기기
+                const warning = document.getElementById('noDocumentWarning');
+                if (warning) {
+                    warning.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('PDF 처리 오류:', error);
+                uploadStatus.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ PDF 처리 중 오류가 발생했습니다: ${error.message}
+                        <br>💡 다른 PDF 파일로 시도해보거나 텍스트가 포함된 PDF를 사용해주세요.
+                    </div>
+                `;
+            }
+        }
+        
+        // 파일 유효성 검사
+        function validateFile(file) {
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const allowedTypes = ['application/pdf'];
+            
+            if (!allowedTypes.includes(file.type)) {
+                showError('PDF 파일만 업로드할 수 있습니다.');
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                showError('파일 크기가 10MB를 초과할 수 없습니다.');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // PDF 텍스트 추출 함수
+        async function extractTextFromPDF(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const typedArray = new Uint8Array(e.target.result);
+                        const pdf = await pdfjsLib.getDocument(typedArray).promise;
+                        let fullText = '';
+                        
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(' ');
+                            fullText += pageText + '\n\n';
+                        }
+                        
+                        resolve(fullText);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = () => reject(new Error('파일 읽기 실패'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        // 드래그 앤 드롭 처리
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                handleFileUpload({ target: { files: files } });
+            }
+        });
+        
+        // AI 질문 처리
+        // async function askAI() {
+        //     const question = document.getElementById('questionInput').value.trim();
+        //     if (question) 
+        // }
+        //         showError('질문을 입력해주세요')
+
+async function askAI() {
+    const question = document.getElementById('questionInput').value.trim();
+    if (question) {
+        // 예시: 비동기 API 호출
+        const response = await fetch('/api/ask', {
+            method: 'POST',
+            body: JSON.stringify({ question }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+        // 결과 처리 코드
+        console.log(data);
+    } else {
+        alert('질문을 입력하세요.');
+    }
+}
